@@ -62,9 +62,12 @@ static NSString *DEFAULT_SITUM_LOG = @"SitumSDK >>: ";
 
 @end
 
-@interface SitumPlugin() {}
+@interface SitumPlugin() <SITGeofencesDelegate> {}
 
 @property (nonatomic, strong) SITRoute *computedRoute;
+@property (nonatomic) BOOL emitEnterGeofences;
+@property (nonatomic) BOOL emitExitGeofences;
+
 
 @end
 
@@ -72,6 +75,7 @@ static NSString *DEFAULT_SITUM_LOG = @"SitumSDK >>: ";
 
 BOOL _positioningUpdates, _navigationUpdates, _realtimeUpdates;
 CLLocationManager *_locationManager;
+
 RNCSitumConfiguration _locationConfiguration;
 RNCSitumRequest *routeRequest;
 
@@ -84,7 +88,7 @@ RCT_EXPORT_MODULE(RNCSitumPlugin);
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"locationChanged", @"statusChanged", @"locationError", @"navigationUpdated", @"navigationError", @"realtimeUpdated", @"realtimeError", @"onEnterGeofences", @"onExitGeofences"];
+    return @[@"locationChanged", @"statusChanged", @"locationError", @"navigationUpdated", @"navigationError", @"realtimeUpdated", @"realtimeError", @"onEnterGeofences", @"onExitGeofences",@"SITGeofenceArray"];
 }
 
 @synthesize computedRoute = _computedRoute;
@@ -724,12 +728,30 @@ RCT_EXPORT_METHOD(getDeviceId:(RCTResponseSenderBlock)callbackBlock)
     callbackBlock(@[@{@"deviceId": SITServices.deviceID}]);
 }
 
+// Method called from React Native to set onEnterGeofencesCallback
 RCT_EXPORT_METHOD(onEnterGeofences){
-    // TODO
+    self.emitEnterGeofences = YES;
+    [SITLocationManager sharedInstance].geofenceDelegate = self;
 }
 
+// Method called from React Native to set onExitGeofencesCallback
 RCT_EXPORT_METHOD(onExitGeofences){
-    // TODO
+    self.emitExitGeofences = YES;
+    [SITLocationManager sharedInstance].geofenceDelegate = self;
+}
+
+- (void)didEnteredGeofences:(NSArray<SITGeofence *> *)geofences {
+    if(self.emitEnterGeofences) {
+        // TODO: After new SDK version, add method toDictionary()
+        [self sendEventWithName:@"onEnterGeofences" body:@"ENTER"];
+    }
+}
+
+- (void)didExitedGeofences:(NSArray<SITGeofence *> *)geofences {
+    if(self.emitEnterGeofences) {
+        // TODO: After new SDK version, add method toDictionary()
+        [self sendEventWithName:@"onExitGeofences" body:@"EXIT"];
+    }
 }
 
 // SITRealtimeDelegate methods
@@ -855,6 +877,5 @@ destinationReachedOnRoute:(SITRoute *)route {
         [self sendEventWithName:@"navigationUpdated" body:navigationJO.copy];
     }
 }
-
 
 @end
