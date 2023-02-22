@@ -35,6 +35,7 @@ steps:
   - bash: |
       echo "##vso[task.setvariable variable=version]$(echo ${{ parameters.RNVersion }})"
       currentBranch=$(echo $(Build.SourceBranch) | cut -d "/" -f 3,4)
+      echo "##vso[task.setvariable variable=currentBranch]$(echo $currentBranch)"
       echo -e "\n[+] Defined versions:"
       echo -e "\t[+] NPM cli version: $(npm --version)" 
       echo -e "\t[+] React Native Plugin version: ${{ parameters.RNVersion }}"
@@ -45,25 +46,34 @@ steps:
       git remote set-url origin https://situmops:$(github_token)@github.com/$(Build.Repository.Name).git
       cat .git/config
 
-      echo -e "\n[+] Setting NPM version to ${{ parameters.RNVersion }}"
-      npm version ${{ parameters.RNVersion }} --no-git-tag-version
+    displayName: Initial Vars & Configs
+
+  - bash: |
+
+      echo -e "\n[+] Setting NPM version to $(version)"
+      npm version $(version) --no-git-tag-version
+
+      echo -e "\n[+] Configure RELEASE.md changes"
+      sed -i -e '/guidelines/rCHANGELOG_UNRELEASED.md' CHANGELOG.md 
+      sed -i '/^#.*Unreleased/d' CHANGELOG.md
+      echo '# [Unreleased]' > CHANGELOG_UNRELEASED.md          
 
       echo -e "\n[+] Setting git to push NPM version\n"
       git config --global user.email "sistemas@situm.es"
-      git config --global user.name "Situm Devops"
+      git config --global user.name "Situmops"
 
       echo -e "\n[+] Fetch branches \n"
       git fetch
 
-      echo -e "\n[+] Changing to $currentBranch"
-      git checkout $currentBranch
+      echo -e "\n[+] Changing to $(currentBranch)"
+      git checkout $(currentBranch)
 
-      echo -e "\n[+] Add,Commit and Push to $currentBranch"
-      git commit -am "Setting the NPM version to ${{ parameters.RNVersion }}"
-      git push --set-upstream origin $currentBranch  
+      echo -e "\n[+] Add,Commit and Push to $(currentBranch)"
+      git commit -am "Setting the NPM version to $(version)"
+      git push --set-upstream origin $(currentBranch)
       git push
+    displayName: Make changes
 
-    displayName: Initial Vars & Configs
 
   - template: azure-templates/publish_release.yml@sys_kubernetes_templates
     parameters:
