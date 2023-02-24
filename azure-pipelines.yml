@@ -53,13 +53,6 @@ steps:
       echo -e "\n[+] Setting NPM version to $(version)"
       npm version $(version) --no-git-tag-version
 
-      echo -e "\n[+] Configure RELEASE.md changes"
-      sed -i -e '/guidelines/rCHANGELOG_UNRELEASED.md' CHANGELOG.md 
-      sed -i '/^#.*Unreleased/d' CHANGELOG.md
-      echo '# [Unreleased]' > CHANGELOG_UNRELEASED.md          
-
-      git commit -am "Configure RELEASE.md $(version)"
-
       echo -e "\n[+] Setting git to push NPM version\n"
       git config --global user.email "sistemas@situm.es"
       git config --global user.name "Situmops"
@@ -84,17 +77,24 @@ steps:
       system: "N/A"
       server: "github"
       mergeBranches:
+        - "master-SIS-614"
         - "develop-SIS-614"
      
 
-  - bash: |
-      echo -e "\n[+] Fetch all branches\n"
-      git fetch
-
-      echo -e "\n[+] Checkout and Pull to master branch\n"
-      git checkout develop-SIS-614
-      git pull origin develop-SIS-614
-
-    displayName: NPM publish
- 
-
+          #  - bash: |
+          #      echo -e "\n[+] Fetch all branches\n"
+          #      git fetch
+          #
+          #      echo -e "\n[+] Checkout and Pull to master branch\n"
+          #      git checkout master
+          #      git pull origin master
+          #
+          #      echo -e "\n[+] Configure NPM login"
+          #      echo "//registry.npmjs.org/:_authToken=$(NPM_TOKEN)" > ~/.npmrc
+          #
+          #      echo -e "\n[+] Publish NPM packages"
+          #      npm publish
+          #
+          #    displayName: NPM publish
+          # 
+          #
