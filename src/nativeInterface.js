@@ -11,7 +11,7 @@ module.exports = {
   RNCSitumPlugin,
   get SitumPluginEventEmitter() {
     if (!nativeEventEmitter) {
-      nativeEventEmitter = new NativeEventEmitter(RNCSitumPlugin);
+      nativeEventEmitter = new NativeEventEmitter();
     }
     return nativeEventEmitter;
   },
